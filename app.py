@@ -2,8 +2,105 @@ import streamlit as st
 import matplotlib.pyplot as plt
 import numpy as np
 
-st.set_page_config(page_title="Greentech AI Guidance Layer", layout="wide")
+st.set_page_config(
+    page_title="Greentech AI Guidance Layer",
+    page_icon="⚡",
+    layout="wide"
+)
 
+# -----------------------------
+# Stile custom
+# -----------------------------
+st.markdown("""
+<style>
+    .main {
+        background-color: #f7faf8;
+    }
+    .block-container {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+    }
+    .hero {
+        background: linear-gradient(135deg, #e8f5ee 0%, #eef7ff 100%);
+        padding: 1.5rem 1.5rem;
+        border-radius: 20px;
+        border: 1px solid #d9e8dd;
+        margin-bottom: 1.2rem;
+    }
+    .hero h1 {
+        margin: 0;
+        font-size: 2.2rem;
+    }
+    .hero p {
+        margin-top: 0.5rem;
+        color: #4a5568;
+        font-size: 1rem;
+    }
+    .section-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin-top: 1rem;
+        margin-bottom: 0.6rem;
+    }
+    .card {
+        background: white;
+        padding: 1rem 1.2rem;
+        border-radius: 18px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.04);
+        margin-bottom: 1rem;
+    }
+    .small-label {
+        color: #6b7280;
+        font-size: 0.9rem;
+        margin-bottom: 0.2rem;
+    }
+    .big-number {
+        font-size: 2rem;
+        font-weight: 800;
+        margin: 0;
+    }
+    .risk-low {
+        color: #15803d;
+        font-weight: 700;
+    }
+    .risk-medium {
+        color: #b45309;
+        font-weight: 700;
+    }
+    .risk-high {
+        color: #b91c1c;
+        font-weight: 700;
+    }
+    .suggestion-box {
+        background: #ffffff;
+        border-left: 5px solid #16a34a;
+        padding: 0.9rem 1rem;
+        border-radius: 12px;
+        margin-bottom: 0.7rem;
+        border-top: 1px solid #e5e7eb;
+        border-right: 1px solid #e5e7eb;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .compare-box {
+        background: white;
+        padding: 1rem 1.2rem;
+        border-radius: 18px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.04);
+        min-height: 170px;
+    }
+    .footer-note {
+        color: #6b7280;
+        font-size: 0.9rem;
+        margin-top: 1rem;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# -----------------------------
+# Funzioni
+# -----------------------------
 def build_profiles(solar_level, consumption_level, battery_level, price_level):
     slots = ["08-10", "10-13", "13-15", "15-18", "18-20"]
     x = np.arange(len(slots))
@@ -39,20 +136,22 @@ def build_profiles(solar_level, consumption_level, battery_level, price_level):
 
     return slots, x, solar_profile, consumption_profile, price_profile, battery_capacity
 
+
 def create_energy_plot(slots, x, solar_profile, consumption_profile, price_profile):
-    fig, ax = plt.subplots(figsize=(8, 4.5))
-    ax.plot(x, solar_profile, marker="o", label="Produzione solare stimata")
-    ax.plot(x, consumption_profile, marker="o", label="Consumo aziendale")
-    ax.plot(x, price_profile, marker="o", linestyle="--", label="Indice prezzo energia")
+    fig, ax = plt.subplots(figsize=(8, 4.2))
+    ax.plot(x, solar_profile, marker="o", linewidth=2, label="Produzione solare")
+    ax.plot(x, consumption_profile, marker="o", linewidth=2, label="Consumo aziendale")
+    ax.plot(x, price_profile, marker="o", linestyle="--", linewidth=2, label="Indice prezzo energia")
     ax.set_xticks(x)
     ax.set_xticklabels(slots)
     ax.set_title("Profilo energetico giornaliero")
     ax.set_xlabel("Fasce orarie")
     ax.set_ylabel("Indice relativo")
     ax.legend()
-    ax.grid(True, alpha=0.3)
+    ax.grid(True, alpha=0.25)
     fig.tight_layout()
     return fig
+
 
 def scenario_comparison(score, consumption_level, price_level):
     base_cost_map = {
@@ -81,6 +180,7 @@ def scenario_comparison(score, consumption_level, price_level):
     savings_pct_display = int(savings_pct * 100)
 
     return baseline_cost, optimized_cost, savings_value, savings_pct_display
+
 
 def energy_guidance(solar_level, consumption_level, battery_level, price_level, critical_slot):
     score = 100
@@ -158,19 +258,26 @@ def energy_guidance(solar_level, consumption_level, battery_level, price_level, 
         if len(suggestions) < 3:
             suggestions.append(msg)
 
-    suggestions = suggestions[:3]
+    return score, risk, insight, suggestions[:3]
 
-    return score, risk, insight, suggestions
+# -----------------------------
+# Header
+# -----------------------------
+st.markdown("""
+<div class="hero">
+    <h1>⚡ Greentech AI Guidance Layer</h1>
+    <p>
+        Prototipo di supporto decisionale per PMI: trasforma uno scenario energetico semplificato
+        in insight operativi, raccomandazioni e confronto economico.
+    </p>
+</div>
+""", unsafe_allow_html=True)
 
-st.title("Greentech AI Guidance Layer")
-st.markdown("**Prototype demo for SME energy decision support**")
-st.write(
-    "Questa demo mostra un layer di supporto decisionale che traduce uno scenario energetico aziendale "
-    "in raccomandazioni operative per il decision-maker."
-)
-
+# -----------------------------
+# Sidebar
+# -----------------------------
 with st.sidebar:
-    st.header("Input scenario")
+    st.header("Configura lo scenario")
     solar_level = st.radio("Produzione solare", ["Basso", "Medio", "Alto"])
     consumption_level = st.radio("Consumo aziendale", ["Basso", "Medio", "Alto"])
     battery_level = st.radio("Stato batteria", ["Basso", "Medio", "Alto"])
@@ -179,7 +286,7 @@ with st.sidebar:
         "Fascia critica",
         ["08:00–10:00", "10:00–13:00", "13:00–15:00", "15:00–18:00", "18:00–20:00"]
     )
-    run = st.button("Genera analisi AI")
+    run = st.button("Genera analisi AI", use_container_width=True)
 
 if run:
     score, risk, insight, suggestions = energy_guidance(
@@ -194,33 +301,98 @@ if run:
         score, consumption_level, price_level
     )
 
+    if risk == "Basso":
+        risk_class = "risk-low"
+    elif risk == "Medio":
+        risk_class = "risk-medium"
+    else:
+        risk_class = "risk-high"
+
+    # KPI
+    st.markdown('<div class="section-title">Executive overview</div>', unsafe_allow_html=True)
     c1, c2, c3 = st.columns(3)
-    c1.metric("Energy Behavior Score", f"{score}/100")
-    c2.metric("Livello di rischio", risk)
-    c3.metric("Risparmio stimato", f"€ {savings_value}")
 
-    st.subheader("Insight AI")
-    st.info(insight)
+    with c1:
+        st.markdown(f"""
+        <div class="card">
+            <div class="small-label">Energy Behavior Score</div>
+            <p class="big-number">{score}/100</p>
+        </div>
+        """, unsafe_allow_html=True)
 
-    st.subheader("Raccomandazioni operative")
-    for i, s in enumerate(suggestions, start=1):
-        st.write(f"{i}. {s}")
+    with c2:
+        st.markdown(f"""
+        <div class="card">
+            <div class="small-label">Livello di rischio</div>
+            <p class="big-number {risk_class}">{risk}</p>
+        </div>
+        """, unsafe_allow_html=True)
 
-    st.subheader("Profilo energetico giornaliero")
-    fig = create_energy_plot(slots, x, solar_profile, consumption_profile, price_profile)
-    st.pyplot(fig)
+    with c3:
+        st.markdown(f"""
+        <div class="card">
+            <div class="small-label">Risparmio stimato</div>
+            <p class="big-number">€ {savings_value}</p>
+        </div>
+        """, unsafe_allow_html=True)
 
-    st.subheader("Scenario comparison")
+    # Insight + Suggestions
+    left, right = st.columns([1, 1])
+
+    with left:
+        st.markdown('<div class="section-title">Insight AI</div>', unsafe_allow_html=True)
+        st.markdown(f"""
+        <div class="card">
+            {insight}
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown('<div class="section-title">Raccomandazioni operative</div>', unsafe_allow_html=True)
+        for i, s in enumerate(suggestions, start=1):
+            st.markdown(f"""
+            <div class="suggestion-box">
+                <strong>{i}.</strong> {s}
+            </div>
+            """, unsafe_allow_html=True)
+
+    with right:
+        st.markdown('<div class="section-title">Profilo energetico giornaliero</div>', unsafe_allow_html=True)
+        fig = create_energy_plot(slots, x, solar_profile, consumption_profile, price_profile)
+        st.pyplot(fig, use_container_width=True)
+
+    # Comparison
+    st.markdown('<div class="section-title">Scenario comparison</div>', unsafe_allow_html=True)
     d1, d2 = st.columns(2)
+
     with d1:
-        st.markdown("### Scenario standard")
-        st.write("Costo energetico giornaliero stimato")
-        st.success(f"€ {baseline_cost}")
-        st.caption("Gestione reattiva dei carichi")
+        st.markdown(f"""
+        <div class="compare-box">
+            <div class="small-label">Scenario standard</div>
+            <p class="big-number">€ {baseline_cost}</p>
+            <p>Gestione reattiva dei carichi</p>
+        </div>
+        """, unsafe_allow_html=True)
+
     with d2:
-        st.markdown("### Scenario con AI Guidance")
-        st.write("Costo energetico giornaliero stimato")
-        st.success(f"€ {optimized_cost}")
-        st.caption(f"Risparmio stimato: € {savings_value} ({savings_pct_display}%)")
+        st.markdown(f"""
+        <div class="compare-box">
+            <div class="small-label">Scenario con AI Guidance</div>
+            <p class="big-number">€ {optimized_cost}</p>
+            <p>Risparmio stimato: € {savings_value} ({savings_pct_display}%)</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown(
+        '<div class="footer-note">Nota: il prototipo utilizza scenari semplificati e una logica dimostrativa, finalizzata a rappresentare il valore consulenziale del layer AI.</div>',
+        unsafe_allow_html=True
+    )
+
 else:
-    st.info("Seleziona i parametri nella sidebar e clicca su 'Genera analisi AI'.")
+    st.markdown("""
+    <div class="card">
+        <strong>Come usare la demo</strong><br><br>
+        1. Configura i parametri nella sidebar.<br>
+        2. Clicca su <em>Genera analisi AI</em>.<br>
+        3. Osserva KPI, raccomandazioni operative, grafico e scenario comparison.
+    </div>
+    """, unsafe_allow_html=True)
