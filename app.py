@@ -19,7 +19,7 @@ st.markdown("""
     .block-container {
         padding-top: 2rem;
         padding-bottom: 2rem;
-        max-width: 1400px;
+        max-width: 1500px;
     }
     .hero {
         background: linear-gradient(135deg, #e8f5ee 0%, #eef7ff 100%);
@@ -139,17 +139,18 @@ def build_profiles(solar_level, consumption_level, battery_level, price_level):
 
 
 def create_energy_plot(slots, x, solar_profile, consumption_profile, price_profile):
-    fig, ax = plt.subplots(figsize=(12, 5.8))
-    ax.plot(x, solar_profile, marker="o", linewidth=2.8, markersize=8, label="Produzione solare")
-    ax.plot(x, consumption_profile, marker="o", linewidth=2.8, markersize=8, label="Consumo aziendale")
-    ax.plot(x, price_profile, marker="o", linestyle="--", linewidth=2.4, markersize=7, label="Indice prezzo energia")
+    fig, ax = plt.subplots(figsize=(16, 7.5))
+    ax.plot(x, solar_profile, marker="o", linewidth=3.2, markersize=10, label="Produzione solare")
+    ax.plot(x, consumption_profile, marker="o", linewidth=3.2, markersize=10, label="Consumo aziendale")
+    ax.plot(x, price_profile, marker="o", linestyle="--", linewidth=2.8, markersize=9, label="Indice prezzo energia")
 
     ax.set_xticks(x)
-    ax.set_xticklabels(slots, fontsize=11)
-    ax.set_title("Profilo energetico giornaliero", fontsize=15, pad=14)
-    ax.set_xlabel("Fasce orarie", fontsize=11)
-    ax.set_ylabel("Indice relativo", fontsize=11)
-    ax.legend(fontsize=10)
+    ax.set_xticklabels(slots, fontsize=13)
+    ax.set_title("Profilo energetico giornaliero", fontsize=18, pad=18)
+    ax.set_xlabel("Fasce orarie", fontsize=13)
+    ax.set_ylabel("Indice relativo", fontsize=13)
+    ax.tick_params(axis='y', labelsize=12)
+    ax.legend(fontsize=12, loc="upper left")
     ax.grid(True, alpha=0.25)
     fig.tight_layout()
     return fig
@@ -299,6 +300,43 @@ def generate_executive_profile(score, risk, solar_level, consumption_level, batt
     return profile, priority, executive_message
 
 
+def generate_report_text(score, risk, insight, suggestions, baseline_cost, optimized_cost, savings_value, savings_pct_display, profile, priority, executive_message, critical_slot):
+    report = f"""
+GREENTECH AI GUIDANCE LAYER
+Report sintetico di scenario
+
+1. Executive overview
+- Energy Behavior Score: {score}/100
+- Livello di rischio energetico: {risk}
+- Risparmio stimato: € {savings_value}
+
+2. Insight AI
+{insight}
+
+3. Raccomandazioni operative
+1) {suggestions[0]}
+2) {suggestions[1]}
+3) {suggestions[2]}
+
+4. Scenario comparison
+- Scenario standard: € {baseline_cost}
+- Scenario con AI Guidance: € {optimized_cost}
+- Risparmio stimato: € {savings_value} ({savings_pct_display}%)
+
+5. Profilo aziendale sintetico
+- Profilo del cliente: {profile}
+- Priorità strategica: {priority}
+
+6. Executive takeaway
+{executive_message}
+
+Nota metodologica
+Il prototipo utilizza scenari semplificati e una logica dimostrativa, finalizzata a rappresentare il valore consulenziale del layer AI.
+Fascia critica analizzata: {critical_slot}
+""".strip()
+    return report
+
+
 # -----------------------------
 # Header
 # -----------------------------
@@ -344,6 +382,12 @@ if run:
         score, risk, solar_level, consumption_level, battery_level, price_level
     )
 
+    report_text = generate_report_text(
+        score, risk, insight, suggestions,
+        baseline_cost, optimized_cost, savings_value, savings_pct_display,
+        profile, priority, executive_message, critical_slot
+    )
+
     if risk == "Basso":
         risk_class = "risk-low"
     elif risk == "Medio":
@@ -380,7 +424,7 @@ if run:
         """, unsafe_allow_html=True)
 
     # Insight + Suggestions
-    left, right = st.columns([1, 1.25])
+    left, right = st.columns([1, 1])
 
     with left:
         st.markdown('<div class="section-title">Insight AI</div>', unsafe_allow_html=True)
@@ -399,9 +443,26 @@ if run:
             """, unsafe_allow_html=True)
 
     with right:
-        st.markdown('<div class="section-title">Profilo energetico giornaliero</div>', unsafe_allow_html=True)
-        fig = create_energy_plot(slots, x, solar_profile, consumption_profile, price_profile)
-        st.pyplot(fig, use_container_width=True)
+        st.markdown('<div class="section-title">Profilo aziendale sintetico</div>', unsafe_allow_html=True)
+
+        st.markdown(f"""
+        <div class="compare-box">
+            <div class="small-label">Profilo del cliente</div>
+            <p>{profile}</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown(f"""
+        <div class="compare-box">
+            <div class="small-label">Priorità strategica</div>
+            <p>{priority}</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # Grafico full width
+    st.markdown('<div class="section-title">Profilo energetico giornaliero</div>', unsafe_allow_html=True)
+    fig = create_energy_plot(slots, x, solar_profile, consumption_profile, price_profile)
+    st.pyplot(fig, use_container_width=True)
 
     # Comparison
     st.markdown('<div class="section-title">Scenario comparison</div>', unsafe_allow_html=True)
@@ -425,32 +486,34 @@ if run:
         </div>
         """, unsafe_allow_html=True)
 
-    # Profilo consulenziale
-    st.markdown('<div class="section-title">Profilo aziendale sintetico</div>', unsafe_allow_html=True)
-    e1, e2 = st.columns(2)
-
-    with e1:
-        st.markdown(f"""
-        <div class="compare-box">
-            <div class="small-label">Profilo del cliente</div>
-            <p>{profile}</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with e2:
-        st.markdown(f"""
-        <div class="compare-box">
-            <div class="small-label">Priorità strategica</div>
-            <p>{priority}</p>
-        </div>
-        """, unsafe_allow_html=True)
-
+    # Executive takeaway
     st.markdown('<div class="section-title">Executive takeaway</div>', unsafe_allow_html=True)
     st.markdown(f"""
     <div class="card">
         {executive_message}
     </div>
     """, unsafe_allow_html=True)
+
+    # Download e next step
+    st.markdown('<div class="section-title">Output consulenziale</div>', unsafe_allow_html=True)
+    c_download, c_next = st.columns([1, 1])
+
+    with c_download:
+        st.download_button(
+            label="Scarica report sintetico",
+            data=report_text,
+            file_name="greentech_ai_guidance_report.txt",
+            mime="text/plain",
+            use_container_width=True
+        )
+
+    with c_next:
+        st.markdown("""
+        <div class="card">
+            <div class="small-label">Prossimo step consulenziale</div>
+            <p>Trasformare questo assessment in audit personalizzato per settore, paese e fascia di consumo energetico.</p>
+        </div>
+        """, unsafe_allow_html=True)
 
     st.markdown(
         '<div class="footer-note">Nota: il prototipo utilizza scenari semplificati e una logica dimostrativa, finalizzata a rappresentare il valore consulenziale del layer AI.</div>',
@@ -463,6 +526,6 @@ else:
         <strong>Come usare la demo</strong><br><br>
         1. Configura i parametri nella sidebar.<br>
         2. Clicca su <em>Genera analisi AI</em>.<br>
-        3. Osserva KPI, raccomandazioni operative, grafico e scenario comparison.
+        3. Osserva KPI, raccomandazioni operative, grafico, confronto economico e output consulenziale.
     </div>
     """, unsafe_allow_html=True)
