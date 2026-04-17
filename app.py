@@ -19,17 +19,18 @@ st.markdown("""
     .block-container {
         padding-top: 2rem;
         padding-bottom: 2rem;
+        max-width: 1400px;
     }
     .hero {
         background: linear-gradient(135deg, #e8f5ee 0%, #eef7ff 100%);
-        padding: 1.5rem 1.5rem;
+        padding: 1.6rem 1.6rem;
         border-radius: 20px;
         border: 1px solid #d9e8dd;
-        margin-bottom: 1.2rem;
+        margin-bottom: 1.4rem;
     }
     .hero h1 {
         margin: 0;
-        font-size: 2.2rem;
+        font-size: 2.3rem;
     }
     .hero p {
         margin-top: 0.5rem;
@@ -40,7 +41,7 @@ st.markdown("""
         font-size: 1.2rem;
         font-weight: 700;
         margin-top: 1rem;
-        margin-bottom: 0.6rem;
+        margin-bottom: 0.7rem;
     }
     .card {
         background: white;
@@ -75,9 +76,9 @@ st.markdown("""
     .suggestion-box {
         background: #ffffff;
         border-left: 5px solid #16a34a;
-        padding: 0.9rem 1rem;
+        padding: 0.95rem 1rem;
         border-radius: 12px;
-        margin-bottom: 0.7rem;
+        margin-bottom: 0.8rem;
         border-top: 1px solid #e5e7eb;
         border-right: 1px solid #e5e7eb;
         border-bottom: 1px solid #e5e7eb;
@@ -138,16 +139,17 @@ def build_profiles(solar_level, consumption_level, battery_level, price_level):
 
 
 def create_energy_plot(slots, x, solar_profile, consumption_profile, price_profile):
-    fig, ax = plt.subplots(figsize=(8, 4.2))
-    ax.plot(x, solar_profile, marker="o", linewidth=2, label="Produzione solare")
-    ax.plot(x, consumption_profile, marker="o", linewidth=2, label="Consumo aziendale")
-    ax.plot(x, price_profile, marker="o", linestyle="--", linewidth=2, label="Indice prezzo energia")
+    fig, ax = plt.subplots(figsize=(12, 5.8))
+    ax.plot(x, solar_profile, marker="o", linewidth=2.8, markersize=8, label="Produzione solare")
+    ax.plot(x, consumption_profile, marker="o", linewidth=2.8, markersize=8, label="Consumo aziendale")
+    ax.plot(x, price_profile, marker="o", linestyle="--", linewidth=2.4, markersize=7, label="Indice prezzo energia")
+
     ax.set_xticks(x)
-    ax.set_xticklabels(slots)
-    ax.set_title("Profilo energetico giornaliero")
-    ax.set_xlabel("Fasce orarie")
-    ax.set_ylabel("Indice relativo")
-    ax.legend()
+    ax.set_xticklabels(slots, fontsize=11)
+    ax.set_title("Profilo energetico giornaliero", fontsize=15, pad=14)
+    ax.set_xlabel("Fasce orarie", fontsize=11)
+    ax.set_ylabel("Indice relativo", fontsize=11)
+    ax.legend(fontsize=10)
     ax.grid(True, alpha=0.25)
     fig.tight_layout()
     return fig
@@ -260,6 +262,43 @@ def energy_guidance(solar_level, consumption_level, battery_level, price_level, 
 
     return score, risk, insight, suggestions[:3]
 
+
+def generate_executive_profile(score, risk, solar_level, consumption_level, battery_level, price_level):
+    if consumption_level == "Alto" and price_level == "Alto":
+        profile = "PMI energivora esposta a pressione sui costi operativi."
+    elif solar_level == "Alto" and battery_level in ["Medio", "Alto"]:
+        profile = "PMI con buon potenziale di autoconsumo e margini di ottimizzazione avanzata."
+    elif solar_level == "Basso" and battery_level == "Basso":
+        profile = "PMI con limitata flessibilità energetica e maggiore dipendenza dalla rete."
+    else:
+        profile = "PMI con profilo energetico intermedio e opportunità di efficientamento progressivo."
+
+    if risk == "Basso":
+        priority = "Consolidare l’efficienza raggiunta e introdurre logiche di pianificazione energetica più granulari."
+    elif risk == "Medio":
+        priority = "Ridurre la variabilità dei carichi e migliorare il coordinamento tra consumo, accumulo e costo dell’energia."
+    else:
+        priority = "Intervenire sui carichi critici e ridurre l’esposizione alle fasce a maggiore costo energetico."
+
+    if score >= 75:
+        executive_message = (
+            "Lo scenario evidenzia una configurazione già efficiente: il valore aggiunto dell’AI è soprattutto incrementale, "
+            "orientato a stabilità operativa e ulteriore ottimizzazione."
+        )
+    elif score >= 50:
+        executive_message = (
+            "Lo scenario presenta una base discreta ma non ancora ottimizzata: il layer AI genera valore nel coordinare meglio "
+            "consumo, accumulo e timing operativo."
+        )
+    else:
+        executive_message = (
+            "Lo scenario mostra una criticità energetica significativa: il layer AI assume una funzione prioritaria di supporto "
+            "decisionale per contenere costi e inefficienze."
+        )
+
+    return profile, priority, executive_message
+
+
 # -----------------------------
 # Header
 # -----------------------------
@@ -301,6 +340,10 @@ if run:
         score, consumption_level, price_level
     )
 
+    profile, priority, executive_message = generate_executive_profile(
+        score, risk, solar_level, consumption_level, battery_level, price_level
+    )
+
     if risk == "Basso":
         risk_class = "risk-low"
     elif risk == "Medio":
@@ -337,7 +380,7 @@ if run:
         """, unsafe_allow_html=True)
 
     # Insight + Suggestions
-    left, right = st.columns([1, 1])
+    left, right = st.columns([1, 1.25])
 
     with left:
         st.markdown('<div class="section-title">Insight AI</div>', unsafe_allow_html=True)
@@ -381,6 +424,33 @@ if run:
             <p>Risparmio stimato: € {savings_value} ({savings_pct_display}%)</p>
         </div>
         """, unsafe_allow_html=True)
+
+    # Profilo consulenziale
+    st.markdown('<div class="section-title">Profilo aziendale sintetico</div>', unsafe_allow_html=True)
+    e1, e2 = st.columns(2)
+
+    with e1:
+        st.markdown(f"""
+        <div class="compare-box">
+            <div class="small-label">Profilo del cliente</div>
+            <p>{profile}</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with e2:
+        st.markdown(f"""
+        <div class="compare-box">
+            <div class="small-label">Priorità strategica</div>
+            <p>{priority}</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown('<div class="section-title">Executive takeaway</div>', unsafe_allow_html=True)
+    st.markdown(f"""
+    <div class="card">
+        {executive_message}
+    </div>
+    """, unsafe_allow_html=True)
 
     st.markdown(
         '<div class="footer-note">Nota: il prototipo utilizza scenari semplificati e una logica dimostrativa, finalizzata a rappresentare il valore consulenziale del layer AI.</div>',
